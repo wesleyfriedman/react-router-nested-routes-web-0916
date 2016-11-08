@@ -6,7 +6,7 @@ import {fetchMovies} from '../actions'
 
 import MoviesList from '../components/MoviesList';
 
-class MoviePage extends Component {
+class MoviesPage extends Component {
 
   componentDidMount(){
     this.props.fetchMovies();

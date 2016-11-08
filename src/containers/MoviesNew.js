@@ -3,6 +3,7 @@ import {connect} from 'react-redux';
 import {addMovie} from '../actions'
 import {bindActionCreators} from 'redux';
 import { browserHistory } from 'react-router';
+
 class MoviesNew extends Component {
 
   handleSubmit(e){

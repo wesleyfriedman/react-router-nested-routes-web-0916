@@ -30,18 +30,380 @@ By using React-Router, we can make our components children of each other. Take Y
 
 Start out with a `MoviePage` component that connects to the store and renders out a `MovieList`. The movie list is presentation and just renders out. Explain that we're using Bootstrap columns for sizing but we could do this ourselves if we wanted to.
 
+To begin, let's take a look at our starter code. First, we have a `MoviePage` component. This component is responsible for connecting to our store and loading our list of movies. A common patter in Redux is to refer to these as `container` components and put them in a `containers` directory. Here we've named ours `MoviePage` - again, a common naming pattern for container components.
+
+```javascript
+// src/containers/MoviesPage.js
+import React, { Component } from 'react';
+import {connect} from 'react-redux';
+import {bindActionCreators} from 'redux';
+
+import {fetchMovies} from '../actions'
+
+import MoviesList from '../components/MoviesList';
+
+class MoviesPage extends Component {
+
+  componentDidMount(){
+    this.props.fetchMovies();
+  }
+
+  render(){
+    return(
+      <div>
+        <MoviesList movies={this.props.movies} />
+      </div>)
+  }
+}
+
+function mapStateToProps(state){
+  return {
+    movies: state.movies
+  }
+}
+
+function mapDispatchToProps(dispatch){
+  return {
+    fetchMovies: bindActionCreators(fetchMovies, dispatch)
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(MoviePage);
+```
+
+We're using `mapStateToProps` to pull the `movies` property from our state and attach it to the `props` of this component. We're also pulling the `fetchMovies` action and attaching that to props as well, that way when our component mounts, we can fire off the action to get it some data.
+
+Finally, our `MoviePage` just renders out a `MovieList` component. Our `MovieList` is purely presentational - here, we can decide what kind of styling to use.
+
+```javascript
+// src/components/MoviesList.js
+
+import React from 'react';
+
+export default (props) => {
+  const movies = props.movies;
+
+  return (
+    <div>
+      <div className='col-md-4'>
+        <ul>
+          {movies.map( movie => <li key={movie.id}>{movie.title}</li>)}
+        </ul>
+      </div>
+    </div>
+  )
+}
+```
+
+ Our Movie list will be our 'master' list on the left side. We're using Bootstrap's column classes to define how  much of the screen our `MovieList` should take up, but we could easily write our own classes or use the columns from a different framework.
+
 ### Linking to the Show
 
-Create the nested routes at `/movies/:id` Have it display at that URL without actually being dynamic - just make it say `Movie Show Component`. Import the `Link` component into our Movie List to link to that component.
+Right now, we're using React Router to display the `MoviePage` component when the url is `/movies`. Let's add in our first nested route - going to '/movies/:id' should display details about a given movie.
+
+First, let's create a `MoviesShow` component. This component will need to connect to the store in order to figure out which Movie it should render, so let's put it in our `containers` directory.
+
+```javascript
+// src/containers/MoviesShow.js
+import React from 'react';
+
+export default (props) => {
+  return(
+    <div>
+      Movies Show Component!
+    </div>
+  )
+}
+```
+
+Next, let's add a nested route in our `index.js` file.
+
+```javascript
+// src/index.js
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import {createStore} from 'redux';
+import rootReducer from './reducers'
+import { Provider } from 'react-redux';
+
+import {Router, Route, IndexRoute, browserHistory} from 'react-router';
+
+import App from './components/App'
+import MoviePage from './containers/MoviePage'
+import MoviesShow from './containers/MoviesShow'
+...
+
+ReactDOM.render(
+  (<Provider store={store} >
+    <Router history={browserHistory} >
+      <Route path="/" component={App} >
+        <Route path='/movies' component={MoviePage} >
+          <Route path="/movies/:id" component={MoviesShow} />
+        </Route>
+      </Route>
+    </Router>
+  </Provider>),
+document.getElementById('container'));
+```
+
+Great, now, let's add links in our `MoviesList` component so that we can click on different movies. To do this, we'll use the `Link` component that React Router gives us.
+
+```javascript
+// src/components/MoviesList.js
+import React from 'react';
+import {Link} from 'react-router';
+export default (props) => {
+  const movies = props.movies;
+
+  return (
+    <div>
+      <div className='col-md-4'>
+        <ul>
+          {movies.map( movie =>
+            <li key={movie.id}>
+              <Link to=`/movies/${movie.id}`>{movie.title}</Link>
+            </li>)}
+        </ul>
+      </div>
+    </div>
+  )
+}
+```
+Awesome! Refresh the page at `/movies`. Now, clicking a link changes the route, but we're not actually seeing any differnet content. What gives? The problem is, we've setup a child component, but we never actually said *where* it should render on the screen.
+
+In React, we can dynamically render child components by pulling them off of the `children` property on our components props. Let's update our `MoviesPage` so that it renders it's child components underneath the `MoviesList`
+
+```javascript
+// src/containers/MoviesPage.js
+import React, { Component } from 'react';
+...
+
+class MoviesPage extends Component {
+...
+
+  render(){
+    return(
+      <div>
+        <MoviesList movies={ this.props.movies } />
+        { this.props.children }
+      </div>)
+  }
+}
+
+...
+
+export default connect(mapStateToProps, mapDispatchToProps)(MoviePage);
+```
+
+Now, any child components provided by ReactRouter will be rendered there. Awesome! Refresh again - now we see our `MoviesShow` component displayed at our dynamic route.
 
 
 ### Dynamically finding the show
 
-Here, we'll use `mapStateToProps` and `ownProps` on our movie component to find the selected movie.
+We've successfully created out nested route. Next, let's wire up our `MoviesShow` component to dynamically render the info about the movie based on the URL. The steps to do so will be as follows:
+
+1. Connect our MoviesShow component to the store so that it knows about the list of movies.
+2. Find the movie where the movie's id matches the `:id` param of our route.
+3. Make that movie available to the component via `props`.
+
+First, let's import `connect` and use our `mapStateToProps` function to let our `MoviesShow` component know about changes to the store.
+
+```javascript
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+
+class MoviesShow extends Component {
+
+  render(){
+    return (
+      <div>
+        Movies Show Component
+      </div>
+    )
+  }
+}
+
+function mapStateToProps(state){
+
+}
+export default connect(mapStateToProps)(MoviesShow);
+```
+
+Now, in `mapStateToProps`, we'd like to access the `:id` supplied to us via the URL. We need to understand two things for this to work.
+
+1. `mapStateToProps` takes a second argument of props that were passed directly to the component. We usually refer to these as `ownProps`
+2. React Router will supply any dynamic pieces of the URL to the component via an object called `routeParams`
+
+This means that we can access the `:id` from the URL via `routeParams` on our `ownProps`
+
+```javascript
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+
+class MoviesShow extends Component {
+
+  render(){
+    return (
+      <div>
+        Movies Show Component
+      </div>
+    )
+  }
+}
+
+function mapStateToProps(state, ownProps){
+  ownProps.routeParams.id // this will return the dynamic portion of the url.
+}
+
+export default connect(mapStateToProps)(MoviesShow);
+```
+
+Note that we have a property called `id` because of the way we defined our route. If we defined our dynamic portion to be `/movies/:dog`, we'd have a `dog` property in our `routeParams`.
+
+Now, we can simply iterate through our list of movies and return the one where our `route` matches.
+
+```javascript
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+
+class MoviesShow extends Component {
+
+  render(){
+    const movie = this.props.movie; // This just makes our JSX a little more readable
+    return (
+      <div className='col-md-8'>
+        { movie.title }
+      </div>
+    )
+  }
+}
+
+function mapStateToProps(state, ownProps){
+   const movie = state.movies.find( ( movie ) => movie.id == ownProps.routeParams.id  )
+   if (movie) {
+     return {
+       movie: movie
+     }
+   } else {
+     return {
+       movie: {}
+     }
+   }
+}
+
+export default connect(mapStateToProps)(MoviesShow);
+```
+
+Now, assuming we find a movie, we simply add it to the props. To account for the case where a movie isn't found, we return just an empty object as the movie.
 
 ### Adding the New Option
 
-Now, we'll create the route for the `new` component. Make this one display the new form.
-Submitting the form should create the new movie and direct back to the movies index using browser history. 
+Let's add our second nested route. Going to '/movies/new' should display the `MoviesNew` component.
+
+We've already created out `MoviesNew` component - it's a simple form that dispatches the `addMovie` action on submission. Let's add that into our Route, the same way we did with our `Show` component.
+
+```javascript
+// src/index.js
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import {createStore} from 'redux';
+import rootReducer from './reducers'
+import { Provider } from 'react-redux';
+
+import {Router, Route, IndexRoute, browserHistory} from 'react-router';
+
+import App from './components/App'
+import MoviePage from './containers/MoviePage'
+import MoviesShow from './containers/MoviesShow'
+...
+
+ReactDOM.render(
+  (<Provider store={store} >
+    <Router history={browserHistory} >
+      <Route path="/" component={App} >
+        <Route path='/movies' component={MoviePage} >
+          <Route path="/movies/new" component={MoviesNew} />
+          <Route path="/movies/:id" component={MoviesShow} />
+        </Route>
+      </Route>
+    </Router>
+  </Provider>),
+document.getElementById('container'));
+```
+Note that we **must** define our `/movies/new` route first. Why? Because otherwise, the `/:id` route handler would catch it first and assing `"new"` to be the id.
+
+Let's add a link to our Movies List to add a new movie.
+
+```javascript
+// src/components/MoviesList
+import React from 'react';
+import {Link} from 'react-router';
+import MoviesListItem from './MoviesListItem';
+
+export default (props) => {
+  const movies = props.movies;
+
+  return (
+    <div>
+      <div className='col-md-4'>
+        <ul>
+          {movies.map( (movie) => <MoviesListItem movie={movie} key={movie.id}/>)}
+        </ul>
+        <Link to="/movies/new">Add a Movie</Link>
+      </div>
+    </div>
+  )
+}
+```
+
+Now, we can easily link between our new movie list and our MovieShow component!
+
+### Redirecting
+
+Finally, it would be nice if after creating the new Movie, we could "redirect" the user back to the '/movies' route. Luckily, React Router gives us a nice interface to do this using `browserHistory`.
+
+In our `MoviesNew` component, let's import `browserHistory` and use it's `push` method to change the route.
+
+```javascript
+//src/containers/MoviesNew
+import React, { Component } from 'react';
+import {connect} from 'react-redux';
+import {addMovie} from '../actions'
+import {bindActionCreators} from 'redux';
+import { browserHistory } from 'react-router';
+
+class MoviesNew extends Component {
+
+  handleSubmit(e){
+    e.preventDefault();
+    const movie = {
+      title: this.refs.movieTitle.value
+    }
+    this.props.addMovie(movie);
+    this.refs.movieTitle.value = "";
+    browserHistory.push('/movies');
+  }
+
+  render(){
+    return (
+      <form onSubmit={this.handleSubmit.bind(this)} >
+        <input type="text" ref="movieTitle" placeholder="Add a Movie" />
+      </form>
+    )
+  }
+}
+
+function mapDispatchToProps(dispatch){
+  return {
+    addMovie: bindActionCreators(addMovie, dispatch)
+  }
+}
+
+export default connect(null, mapDispatchToProps)(MoviesNew)
+```
+
+We can use `browserHistory` to update the URL in any component lifecycle method or any event handler. Now, after submitting our form, we're sent back to the index route. Awesome!
 
 ## Resources

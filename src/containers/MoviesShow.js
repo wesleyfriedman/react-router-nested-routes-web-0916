@@ -20,7 +20,9 @@ function mapStateToProps(state, ownProps){
       movie: movie
     };
   } else {
-    return {};
+    return {
+      movie: {}
+    };
   }
 
 }
