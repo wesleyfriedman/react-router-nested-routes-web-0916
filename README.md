@@ -30,7 +30,7 @@ By using React-Router, we can make our components children of each other. Take Y
 
 Start out with a `MoviePage` component that connects to the store and renders out a `MovieList`. The movie list is presentation and just renders out. Explain that we're using Bootstrap columns for sizing but we could do this ourselves if we wanted to.
 
-To begin, let's take a look at our starter code. First, we have a `MoviePage` component. This component is responsible for connecting to our store and loading our list of movies. A common patter in Redux is to refer to these as `container` components and put them in a `containers` directory. Here we've named ours `MoviePage` - again, a common naming pattern for container components.
+To begin, let's take a look at our starter code. First, we have a `MoviePage` component. This component is responsible for connecting to our store and loading our list of movies. A common pattern in Redux is to refer to these as `container` components and put them in a `containers` directory. Here we've named ours `MoviePage` - again, a common naming pattern for container components.
 
 ```javascript
 // src/containers/MoviesPage.js
