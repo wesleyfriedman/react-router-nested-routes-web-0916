@@ -26,11 +26,11 @@ By using React-Router, we can make our components children of each other. Take Y
 
 ## Code Along
 
-### Rending Our List
+### Rendering Our List
 
-Start out with a `MoviePage` component that connects to the store and renders out a `MovieList`. The movie list is presentation and just renders out. Explain that we're using Bootstrap columns for sizing but we could do this ourselves if we wanted to.
+Start out with a `MoviesPage` component that connects to the store and renders out a `MoviesList`. The movie list is presentation and just renders out. Explain that we're using Bootstrap columns for sizing but we could do this ourselves if we wanted to.
 
-To begin, let's take a look at our starter code. First, we have a `MoviePage` component. This component is responsible for connecting to our store and loading our list of movies. A common pattern in Redux is to refer to these as `container` components and put them in a `containers` directory. Here we've named ours `MoviePage` - again, a common naming pattern for container components.
+To begin, let's take a look at our starter code. First, we have a `MoviesPage` component. This component is responsible for connecting to our store and loading our list of movies. A common pattern in Redux is to refer to these as `container` components and put them in a `containers` directory. Here we've named ours `MoviesPage` - again, a common naming pattern for container components.
 
 ```javascript
 // src/containers/MoviesPage.js
@@ -73,7 +73,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(MoviePage);
 
 We're using `mapStateToProps` to pull the `movies` property from our state and attach it to the `props` of this component. We're also pulling the `fetchMovies` action and attaching that to props as well, that way when our component mounts, we can fire off the action to get it some data.
 
-Finally, our `MoviePage` just renders out a `MovieList` component. Our `MovieList` is purely presentational - here, we can decide what kind of styling to use.
+Finally, our `MoviesPage` just renders out a `MoviesList` component. Our `MoviesList` is purely presentational - here, we can decide what kind of styling to use.
 
 ```javascript
 // src/components/MoviesList.js
@@ -95,11 +95,11 @@ export default (props) => {
 }
 ```
 
- Our Movie list will be our 'master' list on the left side. We're using Bootstrap's column classes to define how  much of the screen our `MovieList` should take up, but we could easily write our own classes or use the columns from a different framework.
+ Our Movie list will be our 'master' list on the left side. We're using Bootstrap's column classes to define how  much of the screen our `MoviesList` should take up, but we could easily write our own classes or use the columns from a different framework.
 
 ### Linking to the Show
 
-Right now, we're using React Router to display the `MoviePage` component when the url is `/movies`. Let's add in our first nested route - going to '/movies/:id' should display details about a given movie.
+Right now, we're using React Router to display the `MoviesPage` component when the url is `/movies`. Let's add in our first nested route - going to '/movies/:id' should display details about a given movie.
 
 First, let's create a `MoviesShow` component. This component will need to connect to the store in order to figure out which Movie it should render, so let's put it in our `containers` directory.
 
@@ -196,7 +196,7 @@ class MoviesPage extends Component {
 export default connect(mapStateToProps, mapDispatchToProps)(MoviePage);
 ```
 
-Now, any child components provided by ReactRouter will be rendered there. Awesome! Refresh again - now we see our `MoviesShow` component displayed at our dynamic route.
+Now, any child components provided by ReactRouter will be rendered there. Remember, child components are defined by the nested structure of our routes under `Router`. Awesome! Refresh again - now we see our `MoviesShow` component displayed at our dynamic route.
 
 
 ### Dynamically finding the show
@@ -315,7 +315,7 @@ import { Provider } from 'react-redux';
 import {Router, Route, IndexRoute, browserHistory} from 'react-router';
 
 import App from './components/App'
-import MoviePage from './containers/MoviePage'
+import MoviesPage from './containers/MoviesPage'
 import MoviesShow from './containers/MoviesShow'
 ...
 
@@ -323,7 +323,7 @@ ReactDOM.render(
   (<Provider store={store} >
     <Router history={browserHistory} >
       <Route path="/" component={App} >
-        <Route path='/movies' component={MoviePage} >
+        <Route path='/movies' component={MoviesPage} >
           <Route path="/movies/new" component={MoviesNew} />
           <Route path="/movies/:id" component={MoviesShow} />
         </Route>
@@ -358,7 +358,7 @@ export default (props) => {
 }
 ```
 
-Now, we can easily link between our new movie list and our MovieShow component!
+Now, we can easily link between our new movie list and our MoviesShow component!
 
 ### Redirecting
 
